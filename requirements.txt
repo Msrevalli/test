@@ -1,3 +1,5 @@
 sudo apt update
+apt list --upgradable
 apt search lua
+sudo apt install lua5.3
 pip install python-docx
