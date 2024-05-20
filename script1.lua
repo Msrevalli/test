@@ -23,62 +23,38 @@ function littleToBigEndian(little)
     return "0x" .. big
 end
 
--- Test cases with varying values
-local test_cases = {
-    -- Basic Test Cases
-    { little = 0x01234567, big = 0x67452301 },
-    { little = 0x87654321, big = 0x21436587 },
-
-    -- Boundary Cases
-    { little = 0x00000000, big = 0x00000000 },
-    { little = 0xFFFFFFFF, big = 0xFFFFFFFF },
-
-    -- Edge Cases
-    { little = 0x00000001, big = 0x01000000 },
-    { little = 0x00000100, big = 0x00010000 },
-    { little = 0x00010000, big = 0x00000100 },
-    { little = 0x01000000, big = 0x00000001 },
-    { little = 0x12345678, big = 0x78563412 },
-    { little = 0xABCDEF01, big = 0x01EFCDAB }
+-- Test data containing normal cases, boundary conditions, and non-hex input data
+test_data = {
+    {little = "0x01234567", big = "0x67452301"}, -- Normal test case
+    {little = "0x87654321", big = "0x21436587"}, -- Normal test case
+    {little = "0x89ABCDEF", big = "0xEFCDAB89"}, -- Normal test case
+    {little = "0xABCDEF01", big = "0x01EFCDAB"}, -- Normal test case
+    {little = "0x00000000", big = "0x00000000"}, -- Boundary condition: All zeros
+    {little = "0xFFFFFFFF", big = "0xFFFFFFFF"}, -- Boundary condition: All ones
+    {little = "0x100000000" , big = nil}, -- Boundary condition: Invalid length
+    {little = "0xFFFFFFFFFF", big = nil}, -- Boundary condition: Invalid length
+    {little = "abc", big = nil},  -- Non-hex input data
+    {little = "123abc", big = nil},  -- Non-hex input data
+    {little = "12345678", big = nil}, -- Non-hex input data
+    {little = true, big = nil}, -- Non-hex input data
+    {little = {}, big = nil}, -- Non-hex input data
+    {little = nil, big = nil}, -- Non-hex input data
+    {little = 123.456, big = nil}, -- Non-hex input data: Float
+    {little = math.huge, big = nil}, -- Non-hex input data: Infinity
+    {little = -math.huge, big = nil}, -- Non-hex input data: Negative infinity
+    {little = 0/0, big = nil}, -- Non-hex input data: NaN
+    {little = "", big = nil}, -- Non-hex input data: Empty string
+    {little = "0x", big = nil}, -- Non-hex input data: Hex prefix only
+    {little = "0xzz", big = nil}, -- Non-hex input data: Invalid hex characters
+    {little = "123456789", big = nil}, -- Non-hex input data: More than 8 hex characters
 }
 
--- Functional Tests
-print("=== Functional Tests ===")
-for i, value in ipairs(test_cases) do
-    local little = value.little
-    local expectedBig = value.big
-    local actualBig = LittleEndian_to_BigEndian(little)
-
-    if actualBig == expectedBig then
-        print(string.format("Test case %d passed: 0x%08X -----> 0x%08X", i, little, actualBig))
-    else
-        error(string.format("Test case %d failed: 0x%08X -----> Expected 0x%08X, Got 0x%08X", i, little, expectedBig, actualBig))
-    end
+-- Iterate over test data and print results
+for _, case in ipairs(test_data) do
+    -- Format input value for printing
+    local little_str = type(case.little) == "table" and "table: " .. tostring(case.little) or tostring(case.little)
+    -- Call littleToBigEndian function and get the result
+    local result = littleToBigEndian(case.little)
+    -- Print the test case details along with expected and actual results
+    print(string.format("little: %s, expected big: %s, result: %s", little_str, tostring(case.big), tostring(result)))
 end
-
--- Operational Tests (Error Handling)
-print("=== Operational Tests ===")
--- Test with non-integer input
-local nonIntegerInput = "hello"
-local success, result = pcall(LittleEndian_to_BigEndian, nonIntegerInput)
-if success then
-    error(string.format("Error: Operational test failed. Expected error, but got result: %s", tostring(result)))
-else
-    print("Operational test passed: Function correctly handled non-integer input.")
-end
-
--- Robustness Tests (Boundary and Edge Cases)
-print("=== Robustness Tests ===")
-for i, value in ipairs(test_cases) do
-    local little = value.little
-    local expectedBig = value.big
-    local actualBig = LittleEndian_to_BigEndian(little)
-
-    if actualBig == expectedBig then
-        print(string.format("Robustness Test case %d passed: 0x%08X -----> 0x%08X", i, little, actualBig))
-    else
-        error(string.format("Robustness Test case %d failed: 0x%08X -----> Expected 0x%08X, Got 0x%08X", i, little, expectedBig, actualBig))
-    end
-end
-
-print("All tests completed.")
