@@ -1,29 +1,37 @@
 -- Function to get country code from country name
 function get_country_code(country)
-    -- Define a table mapping country names to country codes
-    local country_codes = {
-        ['India'] = 91,
-        ['USA'] = 1,
-        ['UK'] = 44,
-        ['Canada'] = 1,
-        ['Australia'] = 61
-        -- Add more country codes as needed
-    }
-    
-    -- Check if the input country name exists in the country_codes table
-    if country_codes[country] then
-        -- If the country name exists, return the corresponding country code
-        return country_codes[country]
-    else
-        -- If the country name doesn't exist, return a message indicating that the country code was not found
-        return "Country code not found"
+    local csv_file = io.open("country_calling_codes.csv", "r")  -- Open the CSV file for reading
+    if not csv_file then
+        print("Error opening CSV file")
+        return nil
     end
+    
+    -- Read each line in the CSV file
+    for line in csv_file:lines() do
+        local country_name, country_code = line:match('"?(.-)"?,(%+%d+)')
+        if country_name and country_code then
+            if country_name:lower() == country:lower() then
+                csv_file:close()  -- Close the CSV file
+                return country_code  -- Return the country code if the country name matches
+            end
+        end
+    end
+    
+    csv_file:close()  -- Close the CSV file
+    
+    return nil  -- Return nil if the country code is not found
 end
 
--- Test the function with different inputs
-print(get_country_code('India'))       -- Output: 91
-print(get_country_code('USA'))         -- Output: 1
-print(get_country_code('UK'))          -- Output: 44
-print(get_country_code('Canada'))      -- Output: 1
-print(get_country_code('Australia'))   -- Output: 61
-print(get_country_code('Japan'))       -- Output: Country code not found
+-- Prompt the user to enter a country name
+print("Enter a country name:")
+local input_country = io.read()  -- Read user input
+
+-- Call the get_country_code function with the user-provided input
+local country_code = get_country_code(input_country)
+
+-- Check if the country code was found
+if country_code then
+    print("Country code: " .. country_code)
+else
+    print("Country code not found")
+end
