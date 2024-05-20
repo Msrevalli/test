@@ -59,10 +59,16 @@ local test_values = {
     
     -- Strings
     "Hello, world!",       -- Regular string
-    "",                    -- Empty string
+    "",                    -- Empty string,
 }
 
--- Iterate over test values and print their representations
+-- Open a CSV file for writing
+local file = io.open("Float_to_HEX.csv", "w")
+
+-- Write the header to the CSV file
+file:write("Test Number,Original Value,Hexadecimal Representation\n")
+
+-- Iterate over test values and write their representations to the CSV file
 for i, value in ipairs(test_values) do
     local hex_representation
     
@@ -70,9 +76,26 @@ for i, value in ipairs(test_values) do
     if type(value) == "number" then
         hex_representation = float2hex(value)
     else
-        hex_representation = nil
+        hex_representation = "nil"
     end
     
-    -- Print the test number, the original value, and its hexadecimal representation
-    print(string.format("Test %d: %s -> %s", i, tostring(value), tostring(hex_representation)))
+    -- Write the test number, the original value, and its hexadecimal representation to the CSV file
+    file:write(string.format("%d,%s,%s\n", i, tostring(value), tostring(hex_representation)))
+end
+
+-- Close the CSV file
+file:close()
+
+-- Prompt user for input
+print("Enter a floating-point number:")
+local user_input = tonumber(io.read()) -- Read user input as a number
+
+-- Convert user input to hexadecimal
+local user_hex_representation = float2hex(user_input)
+
+-- Print the hexadecimal representation
+if user_hex_representation then
+    print("Hexadecimal Representation:", user_hex_representation)
+else
+    print("Invalid input. Please enter a valid floating-point number.")
 end

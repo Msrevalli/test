@@ -1,40 +1,103 @@
--- Define a factorial function to calculate factorial of a number
+-- Define pi constant
+local pi = 3.141592653589793
+
+-- Define a factorial function to calculate factorial of a number using memoization
+local factorials = {1}
 function factorial(n)
-    if n < 1 then
-        return 1
+    if factorials[n] then
+        return factorials[n]
     else
-        return n * factorial(n - 1)
+        factorials[n] = n * factorial(n - 1)
+        return factorials[n]
     end
 end
 
 -- Define a sine function to approximate sine of an angle using Taylor series expansion
 function sine(x)
-    -- Initialize sine_x with the angle x
-    sine_x = x
-    -- Initialize sign to alternate sign in each term of the series
-    sign = -1
-    -- Calculate x^2 and x^3
-    x_square = x * x
-    x_cube = x_square * x
+    local sine_x = x
+    local term = x
+    local sign = -1
 
-    -- Loop to add terms in Taylor series expansion
-    for i = 3, 20, 2 do
-        -- Calculate and add the next term in the series
-        sine_x = sine_x + sign * (x_cube / factorial(i))
-        -- Change sign for the next term
+    for i = 3, 19, 2 do
+        term = term * x * x / (i - 1) / i
+        sine_x = sine_x + sign * term
         sign = -sign
-        -- Update x^3 for the next term
-        x_cube = x_cube * x_square
     end
 
-    -- Return the approximate sine value
     return sine_x
 end
 
--- Loop to test the sine function for angles in degrees from -180 to 180 with step of 30 degrees
-for degree = -180, 180, 30 do
+-- Function to validate user input within the range of -360 to 360
+function validateInput(angle)
+    return type(angle) == "number" and angle >= -360 and angle <= 360
+end
+
+-- Test data for sine function
+local test_data = {
+    -- Functional tests
+    {angle = 0, expected_sine = 0},
+    {angle = 30, expected_sine = 0.5},
+    {angle = 45, expected_sine = 0.707107},
+    {angle = 60, expected_sine = 0.866025},
+    {angle = 90, expected_sine = 1},
+    {angle = 180, expected_sine = 0},
+    {angle = -30, expected_sine = -0.5},
+    {angle = -45, expected_sine = -0.707107},
+    {angle = -60, expected_sine = -0.866025},
+    {angle = -90, expected_sine = -1},
+    -- Special angles
+    {angle = 180, expected_sine = 0},
+    {angle = 360, expected_sine = 0},
+    {angle = -360, expected_sine = 0},
+    -- Edge cases
+    {angle = 1e-10, expected_sine = 1e-10},  -- Very small positive angle
+    {angle = -1e-10, expected_sine = -1e-10}, -- Very small negative angle
+    {angle = 1e10 % 360, expected_sine = math.sin((1e10 % 360) * pi / 180)},   -- Very large positive angle
+    {angle = -1e10 % 360, expected_sine = math.sin((-1e10 % 360) * pi / 180)},  -- Very large negative angle
+    -- Invalid inputs
+    {angle = "abc", expected_sine = nil}, -- Non-numeric input
+    {angle = nil, expected_sine = nil},   -- Nil input
+    {angle = {}, expected_sine = nil},    -- Invalid input type
+}
+
+-- Open CSV file for writing
+local file = io.open("sine_results.csv", "w")
+
+-- Write header to CSV file
+file:write("Angle,Expected Sine,Result,Pass\n")
+
+-- Run tests
+for _, data in ipairs(test_data) do
+    local angle = data.angle
+    local expected_sine = data.expected_sine
+    
+    -- Handle invalid inputs
+    if validateInput(angle) then
+        -- Convert degree to radian
+        local radian = angle * (pi / 180)
+        local result = sine(radian)
+        local pass = expected_sine and math.abs(result - expected_sine) < 0.0001
+        -- Format the result for display
+        result = string.format("%.6f", result)
+        -- Write test data to CSV file
+        file:write(string.format("%s,%s,%s,%s\n", angle, expected_sine, result, pass and "Yes" or "No"))
+    else
+        file:write(string.format("Invalid input: %s,%s,nil,No (Input out of range)\n", tostring(angle), tostring(expected_sine)))
+    end
+end
+
+-- Close CSV file
+file:close()
+
+-- User input test case
+print("Enter an angle between -360 and 360:")
+local user_input = io.read("*n")
+
+if validateInput(user_input) then
     -- Convert degree to radian
-    radian = degree * (3.141592653589793 / 180)
-    -- Print the angle in degrees and its corresponding sine value
-    print(string.format("Sin(%d) = %.6f", degree, sine(radian)))
+    local radian = user_input * (pi / 180)
+    local user_result = sine(radian)
+    print(string.format("The sine of %d degrees is approximately %.6f", user_input, user_result))
+else
+    print("Invalid input. Please enter a number between -360 and 360.")
 end
